@@ -505,17 +505,12 @@ Este comando remove:
 - Taxa de sucesso
 - Espaço libertado pela limpeza
 
-## 📄 Licença
-
-Este projeto está licenciado sob a Licença MIT - veja o ficheiro LICENSE para detalhes.
-
 ## 🆘 Suporte
 
 Para suporte:
 
 1. Consulte este README
 2. Verifique os logs do sistema
-3. Abra uma issue no repositório
 4. Contacte a equipa de administração
 
 ## 📈 Roadmap
