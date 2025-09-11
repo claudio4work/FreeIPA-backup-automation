@@ -1,0 +1,23 @@
+[Unit]
+Description=FreeIPA Backup Cleanup Timer
+Documentation=file:///usr/local/share/freeipa-backup-automation/README.md
+Requires=freeipa-backup-cleanup.service
+
+[Timer]
+# Run weekly on Sunday at 3:00 AM (after backup completes)
+OnCalendar=Sun *-*-* 03:00:00
+
+# Run 2 hours after boot if the system was off during the scheduled time
+OnBootSec=2h
+
+# Allow up to 60 minutes of randomized delay
+RandomizedDelaySec=60min
+
+# If the cleanup takes longer than expected, don't start another one
+Persistent=true
+
+# Wake up the system if it's sleeping (requires appropriate power management setup)
+WakeSystem=false
+
+[Install]
+WantedBy=timers.target
