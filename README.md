@@ -351,16 +351,6 @@ Este comando remove:
 - Taxa de sucesso
 - Espaço libertado pela limpeza
 
-## 🤝 Contribuições
-
-Contribuições são bem-vindas! Por favor:
-
-1. Faça fork do projeto
-2. Crie uma branch para a feature (`git checkout -b feature/nova-funcionalidade`)
-3. Commit as alterações (`git commit -am 'Adicionar nova funcionalidade'`)
-4. Push para a branch (`git push origin feature/nova-funcionalidade`)
-5. Abra um Pull Request
-
 ## 📄 Licença
 
 Este projeto está licenciado sob a Licença MIT - veja o ficheiro LICENSE para detalhes.
