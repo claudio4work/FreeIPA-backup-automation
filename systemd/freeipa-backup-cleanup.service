@@ -13,32 +13,15 @@ StandardOutput=journal
 StandardError=journal
 SyslogIdentifier=freeipa-backup-cleanup
 
-# Security settings
+# Security settings (simplified for compatibility)
 NoNewPrivileges=true
-ProtectSystem=strict
-ProtectHome=true
 PrivateTmp=true
-PrivateDevices=true
-ProtectKernelTunables=true
-ProtectKernelModules=true
-ProtectControlGroups=true
-RestrictRealtime=true
-RestrictNamespaces=true
-LockPersonality=true
-MemoryDenyWriteExecute=true
-RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
-SystemCallFilter=@system-service
-SystemCallErrorNumber=EPERM
 
 # Allow writing to backup directory and log file
 ReadWritePaths=/var/lib/ipa/backup /var/log
 
-# Resource limits
+# Resource limits (simplified)
 Nice=15
-IOSchedulingClass=3
-IOSchedulingPriority=7
-CPUSchedulingPolicy=2
-CPUSchedulingPriority=0
 
 # Timeout settings
 TimeoutStartSec=1800

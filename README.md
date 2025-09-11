@@ -159,6 +159,160 @@ sudo tail -f /var/log/freeipa-backup.log
 sudo /usr/local/bin/notify.sh test
 ```
 
+## 🔍 Comandos Úteis
+
+### Verificar Status dos Timers
+
+```bash
+# Ver todos os timers FreeIPA
+systemctl list-timers | grep freeipa
+
+# Ver detalhes do timer de backup
+systemctl status freeipa-backup.timer
+
+# Ver detalhes do timer de limpeza
+systemctl status freeipa-backup-cleanup.timer
+
+# Ver configuração dos timers
+cat /etc/systemd/system/freeipa-backup.timer
+cat /etc/systemd/system/freeipa-backup-cleanup.timer
+
+# Verificar se os timers estão habilitados
+systemctl is-enabled freeipa-backup.timer freeipa-backup-cleanup.timer
+
+# Ver todos os timers do sistema (contexto)
+systemctl list-timers
+```
+
+### Verificar Status dos Serviços
+
+```bash
+# Status do serviço de backup
+systemctl status freeipa-backup.service
+
+# Status do serviço de limpeza
+systemctl status freeipa-backup-cleanup.service
+
+# Histórico de execuções dos timers
+journalctl -u freeipa-backup.timer --no-pager -n 10
+journalctl -u freeipa-backup-cleanup.timer --no-pager -n 10
+```
+
+### Gestão de Backups
+
+```bash
+# Listar backups existentes
+sudo ls -la /var/lib/ipa/backup/
+
+# Ver tamanho total do diretório de backups
+sudo du -sh /var/lib/ipa/backup/
+
+# Ver tamanho de cada backup individualmente
+sudo bash -c "cd /var/lib/ipa/backup && du -sh * 2>/dev/null"
+
+# Verificar espaço em disco
+df -h /var/lib/ipa/backup
+
+# Executar backup manual
+sudo /usr/local/bin/freeipa-backup.sh
+
+# Executar limpeza manual
+sudo /usr/local/bin/backup-cleanup.sh
+
+# Simular limpeza (dry-run)
+sudo /usr/local/bin/backup-cleanup.sh --dry-run
+```
+
+### Monitorização e Logs
+
+```bash
+# Ver logs do backup em tempo real
+tail -f /var/log/freeipa-backup.log
+
+# Ver logs do systemd para backup
+journalctl -u freeipa-backup.service --no-pager -f
+
+# Ver logs do systemd para limpeza
+journalctl -u freeipa-backup-cleanup.service --no-pager -f
+
+# Ver últimas 50 linhas dos logs
+journalctl -u freeipa-backup.service --no-pager -n 50
+
+# Ver logs de uma data específica
+journalctl -u freeipa-backup.service --since "2025-09-11" --until "2025-09-12"
+
+# Ver configuração atual
+sudo cat /etc/freeipa-backup-automation/config.conf
+```
+
+### Diagnósticos e Troubleshooting
+
+```bash
+# Verificar se FreeIPA está a funcionar
+systemctl status ipa
+ipactl status
+
+# Testar conectividade LDAP
+ldapwhoami -x -H ldap://localhost
+
+# Verificar permissões dos scripts
+ls -la /usr/local/bin/freeipa-backup.sh
+ls -la /usr/local/bin/backup-cleanup.sh
+
+# Verificar integridade dos ficheiros de configuração systemd
+systemd-analyze verify /etc/systemd/system/freeipa-backup.service
+systemd-analyze verify /etc/systemd/system/freeipa-backup.timer
+
+# Recarregar configuração systemd após alterações
+sudo systemctl daemon-reload
+
+# Reiniciar timers após alterações
+sudo systemctl restart freeipa-backup.timer
+sudo systemctl restart freeipa-backup-cleanup.timer
+```
+
+### Gestão do Sistema
+
+```bash
+# Habilitar/desabilitar timers
+sudo systemctl enable freeipa-backup.timer
+sudo systemctl disable freeipa-backup.timer
+
+# Iniciar/parar timers manualmente
+sudo systemctl start freeipa-backup.timer
+sudo systemctl stop freeipa-backup.timer
+
+# Executar serviço de backup imediatamente (para teste)
+sudo systemctl start freeipa-backup.service
+
+# Ver próxima execução programada
+systemctl list-timers freeipa-backup.timer
+
+# Verificar dependências do serviço
+systemctl list-dependencies freeipa-backup.service
+```
+
+### Comandos de Manutenção
+
+```bash
+# Limpar logs antigos do journald
+sudo journalctl --vacuum-time=30d
+
+# Verificar tamanho dos logs (localização pode variar)
+# Em sistemas com journald persistente:
+sudo du -sh /var/log/journal/
+# Em sistemas com journald em memória (mais comum):
+sudo du -sh /run/log/journal/
+# Ou usar o comando que funciona em qualquer configuração:
+sudo journalctl --disk-usage
+
+# Rotacionar logs manualmente
+sudo logrotate /etc/logrotate.d/freeipa-backup
+
+# Verificar configuração do logrotate
+sudo logrotate -d /etc/logrotate.d/freeipa-backup
+```
+
 ## 📊 Agendamento Padrão
 
 - **Backups**: Diariamente às 02:00 (com delay aleatório até 30min)

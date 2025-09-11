@@ -186,9 +186,6 @@ enable_services() {
         
         success "Services and timers enabled and started"
         
-        # Show timer status
-        log "Timer status:"
-        systemctl list-timers freeipa-backup*
     else
         success "Services enabled (timers not started)"
         warn "To start automated backups, run: systemctl start freeipa-backup.timer"
@@ -206,6 +203,11 @@ test_backup() {
         # Show backup status
         log "Backup status:"
         "$BIN_DIR/backup-cleanup.sh" --status || true
+
+        # Show active timer status (now that everything is fully initialized)
+        echo ""
+        log "Active timers (next scheduled executions):"
+        systemctl list-timers | grep freeipa || echo "  No FreeIPA timers found (may need a moment to activate)"
     else
         error "Test backup failed"
         warn "Check logs with: journalctl -u freeipa-backup.service"
@@ -233,10 +235,9 @@ show_summary() {
     echo "  Check status:     $BIN_DIR/backup-cleanup.sh --status"
     echo "  Test notifications: $BIN_DIR/notify.sh test"
     echo ""
-    log "Timer management:"
-    echo "  Start timers:     systemctl start freeipa-backup.timer freeipa-backup-cleanup.timer"
+    log "Timer management (timers are already active):"
+    echo "  View timer status:     systemctl list-timers | grep freeipa"
     echo "  Stop timers:      systemctl stop freeipa-backup.timer freeipa-backup-cleanup.timer"
-    echo "  Timer status:     systemctl list-timers freeipa-backup*"
     echo ""
 }
 
