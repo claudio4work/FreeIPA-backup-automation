@@ -76,9 +76,6 @@ install_files() {
     # Install documentation
     [[ -f "$SCRIPT_DIR/README.md" ]] && cp "$SCRIPT_DIR/README.md" "$INSTALL_DIR/"
     
-    # Install configuration file if it exists
-    [[ -f "$SCRIPT_DIR/config.conf" ]] && cp "$SCRIPT_DIR/config.conf" "$INSTALL_DIR/"
-    
     # Install new systemd files
     cp "$SCRIPT_DIR/systemd-2.0.0/freeipa-backup@.service" "$SYSTEMD_DIR/"
     cp "$SCRIPT_DIR/systemd-2.0.0/freeipa-backup-data.timer" "$SYSTEMD_DIR/"
