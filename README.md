@@ -32,7 +32,7 @@ By default, the system keeps:
 
 This policy is configurable in the `config.conf` file.
 
-## 😠 Usage (2.0.0)
+## ⚡ Usage (2.0.0)
 
 ### Manual Execution
 
