@@ -1,6 +1,16 @@
-# FreeIPA Backup Automation
+# FreeIPA Backup Automation v2.0
 
 Uma solução completa de automatização para backups regulares do FreeIPA com gestão inteligente de retenção e monitorização.
+
+## 🆕 Novidades v2.0
+
+- **🎯 Estratégia FULL/DATA**: Backups FULL aos domingos, DATA nos outros dias
+- **🔧 Flexibilidade**: Suporte a execução manual com `--type {full|data|auto}`
+- **🧪 Modo de teste**: `DRY_RUN=1` para simulações sem executar
+- **⚡ Performance**: Backups DATA online (sem parar serviços)
+- **🔍 Melhor logging**: Logs para systemd journal e arquivo
+- **🔒 Segurança**: Validação rigorosa e gestão de variáveis
+- **📦 Instalação**: Script automatizado para upgrade da v1.0 → v2.0
 
 ## 🎯 Funcionalidades
 
@@ -22,6 +32,53 @@ Por defeito, o sistema mantém:
 
 Esta política é configurável no ficheiro `config.conf`.
 
+## 🛠️ Utilização v2.0
+
+### Execução Manual
+
+```bash
+# Backup automático (FULL dom, DATA outros dias)
+sudo /opt/sysadmin-scripts/freeipa-backup-automation/freeipa-backup.sh
+
+# Forçar backup apenas de dados
+sudo /opt/sysadmin-scripts/freeipa-backup-automation/freeipa-backup.sh --type data
+
+# Forçar backup completo
+sudo /opt/sysadmin-scripts/freeipa-backup-automation/freeipa-backup.sh --type full
+
+# Simular backup sem executar (teste)
+DRY_RUN=1 /opt/sysadmin-scripts/freeipa-backup-automation/freeipa-backup.sh --type full
+```
+
+### Gestão de Timers v2.0
+
+```bash
+# Ver estado dos novos timers
+systemctl list-timers | grep freeipa-backup
+
+# Parar/iniciar timers individuais
+sudo systemctl stop freeipa-backup-data.timer
+sudo systemctl start freeipa-backup-full.timer
+
+# Ver logs dos backups
+journalctl -u freeipa-backup@data.service -n 50
+journalctl -u freeipa-backup@full.service -n 50
+```
+
+### Variáveis de Ambiente
+
+Personalização avançada (respeitando regra de não sobrescrever):
+
+```bash
+# Personalizar localização e comportamento
+export BACKUP_DIR="/custom/backup/location"
+export DRY_RUN="1"  # Modo simulação
+export BACKUP_TYPE="full"  # Forçar tipo
+
+# Executar com customizações
+sudo -E /opt/sysadmin-scripts/freeipa-backup-automation/freeipa-backup.sh
+```
+
 ## 🚀 Instalação Rápida
 
 ### Pré-requisitos
@@ -30,24 +87,36 @@ Esta política é configurável no ficheiro `config.conf`.
 - Acesso root
 - systemd (para agendamento)
 
-### Instalação
+### Instalação Nova (v2.0)
 
 ```bash
 # Clone o repositório
 git clone <repository-url>
 cd freeipa-backup-automation
 
-# Execute o script de instalação
-sudo ./install.sh
+# Execute o script de instalação v2.0
+sudo ./install-v2.sh
 ```
 
-O script de instalação irá:
-1. Verificar se o FreeIPA está instalado
-2. Copiar os scripts para `/usr/local/bin/`
-3. Configurar os serviços systemd
-4. Configurar a rotação de logs
-5. Executar um backup de teste
-6. Ativar os timers automáticos
+### Upgrade v1.0 → v2.0
+
+Para atualizar de uma instalação v1.0 existente:
+
+```bash
+# No diretório do repositório
+sudo ./install-v2.sh upgrade
+
+# Em caso de problemas, rollback automático
+sudo ./install-v2.sh rollback
+```
+
+📝 **O que acontece no upgrade:**
+1. ✅ Backup automático da instalação v1.0 atual
+2. ✅ Instalação do novo script com suporte FULL/DATA
+3. ✅ Configuração dos novos timers (DATA: Seg-Sáb, FULL: Dom)
+4. ✅ Desativação do timer antigo (diário)
+5. ✅ Teste da nova configuração
+6. ✅ Possibilidade de rollback instantâneo
 
 ### Instalação Personalizada
 

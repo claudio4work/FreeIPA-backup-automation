@@ -1,28 +1,137 @@
-#!/bin/bash
+#!/usr/bin/env bash
 #
-# FreeIPA Backup Script
-# Performs automated backup of FreeIPA server with proper error handling
+# FreeIPA Backup Script v2.0
+# Performs automated backup of FreeIPA server with FULL/DATA support
+# Supports:
+#   - FULL backups (complete system) on Sundays  
+#   - DATA backups (data only) on weekdays
+#   - AUTO mode (detects day of week automatically)
+#   - DRY_RUN mode for testing
+#   - Manual type selection
 #
+
+set -euo pipefail
+umask 077
 
 # Source configuration
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CONFIG_FILE="${SCRIPT_DIR}/config.conf"
 
-# Default values
-BACKUP_DIR="/var/lib/ipa/backup"
-LOG_FILE="/var/log/freeipa-backup.log"
-LOCK_FILE="/var/run/freeipa-backup.lock"
+# Default values - only set if not already defined (following rule)
+if [ -z "${BACKUP_DIR+x}" ]; then BACKUP_DIR="/var/lib/ipa/backup"; fi
+if [ -z "${LOG_FILE+x}" ]; then LOG_FILE="/var/log/freeipa-backup.log"; fi
+if [ -z "${LOCK_FILE+x}" ]; then LOCK_FILE="/var/run/freeipa-backup.lock"; fi
+if [ -z "${BACKUP_CMD+x}" ]; then BACKUP_CMD="/usr/sbin/ipa-backup"; fi
+if [ -z "${BACKUP_TYPE+x}" ]; then BACKUP_TYPE="auto"; fi
+if [ -z "${ONLINE_FLAG+x}" ]; then ONLINE_FLAG="--online"; fi
+if [ -z "${VERBOSE_FLAG+x}" ]; then VERBOSE_FLAG="-v"; fi
+if [ -z "${DRY_RUN+x}" ]; then DRY_RUN="0"; fi
 
 # Source config file if it exists
 if [[ -f "$CONFIG_FILE" ]]; then
     source "$CONFIG_FILE"
 fi
 
-# Logging function
+# Usage function
+usage() {
+    cat << EOF
+Uso: $0 [OPTIONS]
+
+OPÇÕES:
+  --type TIPO     Tipo de backup: full, data ou auto (padrão: auto)
+  -h, --help      Mostrar esta ajuda
+
+TIPOS DE BACKUP:
+  full            Backup completo do sistema (sem --data)
+  data            Backup apenas dos dados (com --data)  
+  auto            Automático: FULL aos domingos, DATA nos outros dias
+
+VARIÁVEIS DE AMBIENTE:
+  BACKUP_DIR      Diretório dos backups (padrão: /var/lib/ipa/backup)
+  BACKUP_CMD      Comando ipa-backup (padrão: /usr/sbin/ipa-backup)
+  BACKUP_TYPE     Tipo padrão (padrão: auto)
+  DRY_RUN         Modo teste, só mostra comandos (padrão: 0)
+  ONLINE_FLAG     Flag --online (padrão: --online)
+  VERBOSE_FLAG    Flag verbose (padrão: -v)
+
+EXEMPLOS:
+  $0                          # Backup automático (FULL dom, DATA outros)
+  $0 --type data              # Backup apenas dados
+  $0 --type full              # Backup completo
+  DRY_RUN=1 $0 --type data    # Teste sem executar
+
+EOF
+    exit 1
+}
+
+# Parse command line arguments
+parse_args() {
+    while [ $# -gt 0 ]; do
+        case "$1" in
+            --type)
+                shift
+                if [ $# -eq 0 ]; then
+                    echo "Erro: --type requer um argumento (full|data|auto)"
+                    usage
+                fi
+                BACKUP_TYPE="$1"
+                ;;
+            -h|--help)
+                usage
+                ;;
+            *)
+                echo "Erro: Argumento inválido: $1"
+                usage
+                ;;
+        esac
+        shift
+    done
+}
+
+# Detect backup type based on day of week (auto mode)
+detect_type() {
+    if [ "$BACKUP_TYPE" = "auto" ]; then
+        local dow
+        dow=$(date +%u)  # 1=Monday ... 7=Sunday
+        if [ "$dow" -eq 7 ]; then
+            BACKUP_TYPE="full"
+        else
+            BACKUP_TYPE="data"
+        fi
+    fi
+    
+    # Validate backup type
+    case "$BACKUP_TYPE" in
+        full|data)
+            # Valid types
+            ;;
+        *)
+            echo "Erro: Tipo de backup inválido: $BACKUP_TYPE"
+            echo "Tipos válidos: full, data, auto"
+            exit 1
+            ;;
+    esac
+}
+
+# Find latest backup of given type
+latest_backup() {
+    local backup_type="$1"
+    # List directories/files matching pattern, sort by modification time, get most recent
+    ls -1dt "$BACKUP_DIR"/ipa-${backup_type}-* 2>/dev/null | head -n1 || true
+}
+
+# Enhanced logging function with syslog support
 log() {
     local level="$1"
     shift
-    echo "[$(date '+%Y-%m-%d %H:%M:%S')] [$level] $*" | tee -a "$LOG_FILE"
+    local message="$*"
+    local timestamp="$(date '+%Y-%m-%d %H:%M:%S')"
+    
+    # Log to file
+    echo "[$timestamp] [$level] $message" | tee -a "$LOG_FILE"
+    
+    # Log to syslog/journal
+    logger -t "freeipa-backup" "[$level] $message"
 }
 
 # Error handling function
@@ -111,10 +220,22 @@ start_ipa() {
     error_exit "Failed to start FreeIPA services after $max_attempts attempts"
 }
 
-# Perform backup
+# Build backup command based on type
+build_backup_command() {
+    local cmd="$BACKUP_CMD $VERBOSE_FLAG $ONLINE_FLAG"
+    
+    # Add --data flag for DATA backups only
+    if [ "$BACKUP_TYPE" = "data" ]; then
+        cmd="$cmd --data"
+    fi
+    
+    echo "$cmd"
+}
+
+# Perform backup with FULL/DATA support
 perform_backup() {
     local backup_name="ipa-backup-$(date +%Y%m%d-%H%M%S)"
-    log "INFO" "Starting backup: $backup_name"
+    log "INFO" "Starting $BACKUP_TYPE backup: $backup_name"
     
     # Ensure backup directory exists
     if [[ ! -d "$BACKUP_DIR" ]]; then
@@ -122,36 +243,79 @@ perform_backup() {
         mkdir -p "$BACKUP_DIR" || error_exit "Failed to create backup directory"
     fi
     
-    # Perform the backup
-    if ipa-backup -v --data --online; then
-        log "INFO" "Backup completed successfully"
-        
-        # Find the most recent backup directory
-        local latest_backup=$(find "$BACKUP_DIR" -maxdepth 1 -type d -name "ipa-full-*" -printf '%T@ %p\n' | sort -n | tail -1 | cut -d' ' -f2-)
-        
-        if [[ -n "$latest_backup" ]]; then
-            log "INFO" "Latest backup location: $latest_backup"
-            
-            # Create a symlink to the latest backup
-            ln -sfn "$latest_backup" "$BACKUP_DIR/latest"
-            
-            # Get backup size
-            local backup_size=$(du -sh "$latest_backup" 2>/dev/null | cut -f1)
-            log "INFO" "Backup size: ${backup_size:-unknown}"
-        fi
+    # Build the backup command
+    local backup_command
+    backup_command=$(build_backup_command)
+    
+    log "INFO" "Executing: $backup_command"
+    
+    # Perform the backup (with DRY_RUN support)
+    if [ "$DRY_RUN" = "1" ]; then
+        log "INFO" "[DRY_RUN] Would execute: $backup_command"
+        log "INFO" "[DRY_RUN] Backup simulation completed"
     else
-        error_exit "Backup failed"
+        if eval "$backup_command"; then
+            log "INFO" "Backup completed successfully"
+            
+            # Find the most recent backup directory of the correct type
+            local latest_backup
+            latest_backup=$(latest_backup "$BACKUP_TYPE")
+            
+            if [[ -n "$latest_backup" ]]; then
+                log "INFO" "Latest $BACKUP_TYPE backup location: $latest_backup"
+                
+                # Create a symlink to the latest backup
+                if ln -sfn "$latest_backup" "$BACKUP_DIR/latest"; then
+                    log "INFO" "Updated latest backup symlink"
+                else
+                    log "WARN" "Failed to create latest backup symlink"
+                fi
+                
+                # Get backup size
+                local backup_size
+                backup_size=$(du -sh "$latest_backup" 2>/dev/null | cut -f1 || echo "unknown")
+                log "INFO" "Backup size: $backup_size"
+                
+                # Log backup type and location for monitoring
+                logger -t "freeipa-backup" "Backup completed: type=$BACKUP_TYPE, location=$latest_backup, size=$backup_size"
+            else
+                log "WARN" "Could not find the created backup directory"
+            fi
+        else
+            error_exit "Backup failed"
+        fi
     fi
 }
 
 # Main function
 main() {
-    log "INFO" "Starting FreeIPA backup process"
+    # Parse command line arguments first
+    parse_args "$@"
+    
+    # Detect/set backup type based on arguments or day of week
+    detect_type
+    
+    log "INFO" "Starting FreeIPA $BACKUP_TYPE backup process"
+    
+    # Show configuration for transparency
+    log "INFO" "Configuration: BACKUP_TYPE=$BACKUP_TYPE, BACKUP_DIR=$BACKUP_DIR, DRY_RUN=$DRY_RUN"
     
     # Pre-flight checks
     check_root
     check_lock
     check_freeipa
+    
+    # For FULL backups, we need to stop services (can't use --online)
+    # For DATA backups, we can keep services running with --online
+    local need_service_stop=false
+    if [ "$BACKUP_TYPE" = "full" ]; then
+        need_service_stop=true
+        # Remove --online flag for full backups
+        ONLINE_FLAG=""
+        log "INFO" "Full backup mode: will stop services during backup"
+    else
+        log "INFO" "Data backup mode: services will remain online"
+    fi
     
     # Store initial FreeIPA status
     local ipa_was_running=false
@@ -160,20 +324,27 @@ main() {
     fi
     
     # Trap to ensure cleanup and service restart on exit
-    trap 'cleanup; if $ipa_was_running && ! check_ipa_status; then log "WARN" "Attempting to restart FreeIPA services..."; start_ipa; fi' EXIT
+    trap 'cleanup; if $ipa_was_running && $need_service_stop && ! check_ipa_status; then log "WARN" "Attempting to restart FreeIPA services..."; start_ipa; fi' EXIT
     
     # Perform backup process
-    if $ipa_was_running; then
+    if $need_service_stop && $ipa_was_running; then
         stop_ipa
     fi
     
     perform_backup
     
-    if $ipa_was_running; then
+    if $need_service_stop && $ipa_was_running; then
         start_ipa
     fi
     
-    log "INFO" "FreeIPA backup process completed successfully"
+    # Show latest backup info
+    local latest
+    latest=$(latest_backup "$BACKUP_TYPE")
+    if [[ -n "$latest" ]]; then
+        log "INFO" "Latest $BACKUP_TYPE backup: $latest"
+    fi
+    
+    log "INFO" "FreeIPA $BACKUP_TYPE backup process completed successfully"
 }
 
 # Run main function if script is executed directly

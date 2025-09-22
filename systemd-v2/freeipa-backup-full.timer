@@ -1,0 +1,26 @@
+[Unit]
+Description=Weekly FreeIPA FULL backup (Sun 02:00)
+Documentation=file:///opt/sysadmin-scripts/freeipa-backup-automation/README.md
+Requires=freeipa-backup@full.service
+
+[Timer]
+# Run Sunday at 2:00 AM
+OnCalendar=Sun 02:00
+
+# Run 15 minutes after boot if the system was off during the scheduled time
+OnBootSec=15min
+
+# Allow up to 5 minutes of randomized delay to avoid thundering herd
+RandomizedDelaySec=5min
+
+# If the backup takes longer than expected, don't start another one
+Persistent=true
+
+# Wake up the system if it's sleeping (requires appropriate power management setup)
+WakeSystem=true
+
+# Target the template service with 'full' parameter
+Unit=freeipa-backup@full.service
+
+[Install]
+WantedBy=timers.target
