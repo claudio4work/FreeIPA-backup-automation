@@ -307,7 +307,7 @@ main() {
     
     # For FULL backups, we need to stop services (can't use --online)
     # For DATA backups, we can keep services running with --online
-    need_service_stop=false  # Global variable for trap access
+    local need_service_stop=false
     if [ "$BACKUP_TYPE" = "full" ]; then
         need_service_stop=true
         # Remove --online flag for full backups
@@ -318,13 +318,22 @@ main() {
     fi
     
     # Store initial FreeIPA status
-    ipa_was_running=false  # Global variable for trap access
+    local ipa_was_running=false
     if check_ipa_status; then
         ipa_was_running=true
     fi
     
-    # Trap to ensure cleanup and service restart on exit
-    trap 'cleanup; if [ "$ipa_was_running" = "true" ] && [ "$need_service_stop" = "true" ] && ! check_ipa_status; then log "WARN" "Attempting to restart FreeIPA services..."; start_ipa; fi' EXIT
+    # Safe cleanup function that doesn't rely on trap context
+    cleanup_with_restart() {
+        cleanup
+        if [ "$ipa_was_running" = "true" ] && [ "$need_service_stop" = "true" ] && ! check_ipa_status; then
+            log "WARN" "Attempting to restart FreeIPA services..."
+            start_ipa
+        fi
+    }
+    
+    # Trap to ensure cleanup on exit (simple, no variable dependencies)
+    trap 'cleanup' EXIT
     
     # Perform backup process
     if [ "$need_service_stop" = "true" ] && [ "$ipa_was_running" = "true" ]; then
@@ -343,6 +352,12 @@ main() {
     if [[ -n "$latest" ]]; then
         log "INFO" "Latest $BACKUP_TYPE backup: $latest"
     fi
+    
+    # Disable trap since we're handling cleanup manually
+    trap - EXIT
+    
+    # Manual cleanup with service restart if needed
+    cleanup_with_restart
     
     log "INFO" "FreeIPA $BACKUP_TYPE backup process completed successfully"
 }
