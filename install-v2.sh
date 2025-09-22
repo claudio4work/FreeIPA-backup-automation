@@ -143,7 +143,7 @@ rollback() {
 # Main function
 main() {
     case "${1:-install}" in
-        install|update)
+        install|update|upgrade)
             check_root
             backup_current
             install_files
@@ -158,10 +158,17 @@ main() {
             DRY_RUN=1 "$INSTALL_DIR/freeipa-backup.sh" --type auto
             ;;
         *)
-            echo "Usage: $0 [install|rollback|test]"
+            echo "Usage: $0 [install|upgrade|rollback|test]"
             echo "  install  - Install/update to v2.0 (default)"
+            echo "  upgrade  - Same as install (upgrade v1.0 → v2.0)"
             echo "  rollback - Rollback to previous version"
             echo "  test     - Test the installed script"
+            echo
+            echo "Examples:"
+            echo "  sudo $0              # Fresh install or upgrade"
+            echo "  sudo $0 upgrade      # Upgrade from v1.0 to v2.0"
+            echo "  sudo $0 rollback     # Emergency rollback"
+            echo "  sudo $0 test         # Test current installation"
             exit 1
             ;;
     esac
