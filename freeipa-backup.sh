@@ -307,7 +307,7 @@ main() {
     
     # For FULL backups, we need to stop services (can't use --online)
     # For DATA backups, we can keep services running with --online
-    local need_service_stop=false
+    need_service_stop=false  # Global variable for trap access
     if [ "$BACKUP_TYPE" = "full" ]; then
         need_service_stop=true
         # Remove --online flag for full backups
@@ -318,22 +318,22 @@ main() {
     fi
     
     # Store initial FreeIPA status
-    local ipa_was_running=false
+    ipa_was_running=false  # Global variable for trap access
     if check_ipa_status; then
         ipa_was_running=true
     fi
     
     # Trap to ensure cleanup and service restart on exit
-    trap 'cleanup; if $ipa_was_running && $need_service_stop && ! check_ipa_status; then log "WARN" "Attempting to restart FreeIPA services..."; start_ipa; fi' EXIT
+    trap 'cleanup; if [ "$ipa_was_running" = "true" ] && [ "$need_service_stop" = "true" ] && ! check_ipa_status; then log "WARN" "Attempting to restart FreeIPA services..."; start_ipa; fi' EXIT
     
     # Perform backup process
-    if $need_service_stop && $ipa_was_running; then
+    if [ "$need_service_stop" = "true" ] && [ "$ipa_was_running" = "true" ]; then
         stop_ipa
     fi
     
     perform_backup
     
-    if $need_service_stop && $ipa_was_running; then
+    if [ "$need_service_stop" = "true" ] && [ "$ipa_was_running" = "true" ]; then
         start_ipa
     fi
     
