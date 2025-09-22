@@ -91,7 +91,7 @@ sudo -E /opt/sysadmin-scripts/freeipa-backup-automation/freeipa-backup.sh
 
 ```bash
 # Clone the repository
-git clone <repository-url>
+git clone https://github.com/claudio4work/freeipa-backup-automation.git
 cd freeipa-backup-automation
 
 # Run the v2.0 installation script
