@@ -54,11 +54,12 @@ backup_before_removal() {
     # Backup configuration
     [[ -d "$CONFIG_DIR" ]] && cp -r "$CONFIG_DIR" "$backup_dir/"
     
-    # Backup any custom scripts
+    # Backup any custom scripts and documentation
     [[ -d "$INSTALL_DIR_V2" ]] && cp -r "$INSTALL_DIR_V2" "$backup_dir/"
     [[ -f "$INSTALL_DIR_V1/freeipa-backup.sh" ]] && cp "$INSTALL_DIR_V1/freeipa-backup.sh" "$backup_dir/"
     [[ -f "$INSTALL_DIR_V1/backup-cleanup.sh" ]] && cp "$INSTALL_DIR_V1/backup-cleanup.sh" "$backup_dir/"
     [[ -f "$INSTALL_DIR_V1/notify.sh" ]] && cp "$INSTALL_DIR_V1/notify.sh" "$backup_dir/"
+    [[ -f "$INSTALL_DIR_V1/README.md" ]] && cp "$INSTALL_DIR_V1/README.md" "$backup_dir/"
     
     # Backup systemd files
     mkdir -p "$backup_dir/systemd"

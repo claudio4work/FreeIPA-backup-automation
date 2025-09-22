@@ -73,6 +73,12 @@ install_files() {
     chmod +x "$INSTALL_DIR/backup-cleanup.sh"
     chmod +x "$INSTALL_DIR/notify.sh"
     
+    # Install documentation
+    [[ -f "$SCRIPT_DIR/README.md" ]] && cp "$SCRIPT_DIR/README.md" "$INSTALL_DIR/"
+    
+    # Install configuration file if it exists
+    [[ -f "$SCRIPT_DIR/config.conf" ]] && cp "$SCRIPT_DIR/config.conf" "$INSTALL_DIR/"
+    
     # Install new systemd files
     cp "$SCRIPT_DIR/systemd-2.0.0/freeipa-backup@.service" "$SYSTEMD_DIR/"
     cp "$SCRIPT_DIR/systemd-2.0.0/freeipa-backup-data.timer" "$SYSTEMD_DIR/"
@@ -113,10 +119,16 @@ show_status() {
     echo
     log "OK" "Installation completed successfully!"
     echo
+    log "INFO" "Installation paths:"
+    echo "  • Scripts: $INSTALL_DIR/"
+    echo "  • Documentation: $INSTALL_DIR/README.md"
+    echo "  • Configuration: /etc/freeipa-backup-automation/config.conf"
+    echo
     log "INFO" "Next steps:"
     echo "  1. Review logs: journalctl -u freeipa-backup-data.service"
     echo "  2. Test manually: sudo $INSTALL_DIR/freeipa-backup.sh --type data" 
     echo "  3. Monitor timers: systemctl list-timers | grep freeipa-backup"
+    echo "  4. View documentation: less $INSTALL_DIR/README.md"
     echo
 }
 
