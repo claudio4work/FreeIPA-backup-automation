@@ -23,7 +23,7 @@ A comprehensive automation solution for regular FreeIPA backups with intelligent
 
 ## 📋 Retention Policy
 
-By default, the system maintains:
+By default, the system keeps:
 
 - **Daily Backups**: 7 days
 - **Weekly Backups** (Mondays): 4 weeks
@@ -48,7 +48,7 @@ sudo /opt/sysadmin-scripts/freeipa-backup-automation/freeipa-backup.sh --type fu
 
 # Simulate backup without execution (test)
 DRY_RUN=1 /opt/sysadmin-scripts/freeipa-backup-automation/freeipa-backup.sh --type full
-```
+````
 
 ### v2.0 Timer Management
 
@@ -83,9 +83,9 @@ sudo -E /opt/sysadmin-scripts/freeipa-backup-automation/freeipa-backup.sh
 
 ### Prerequisites
 
-- FreeIPA installed and configured
-- Root access
-- systemd (for scheduling)
+* FreeIPA installed and configured
+* Root access
+* systemd (for scheduling)
 
 ### Fresh Installation (v2.0)
 
@@ -111,10 +111,11 @@ sudo ./install-v2.sh rollback
 ```
 
 📝 **What happens during upgrade:**
+
 1. ✅ Automatic backup of current v1.0 installation
 2. ✅ Installation of new script with FULL/DATA support
 3. ✅ Configuration of new timers (DATA: Mon-Sat, FULL: Sun)
-4. ✅ Deactivation of old timer (daily)
+4. ✅ Deactivation of old daily timer
 5. ✅ Testing of new configuration
 6. ✅ Instant rollback possibility
 
@@ -138,16 +139,16 @@ sudo ./install.sh --no-test
 Edit `/etc/freeipa-backup-automation/config.conf` to customize:
 
 ```bash
-# Localização dos backups
+# Backup location
 BACKUP_DIR="/var/lib/ipa/backup"
 
-# Política de retenção (em dias)
+# Retention policy (in days)
 DAILY_RETENTION=7
 WEEKLY_RETENTION=28
 MONTHLY_RETENTION=365
 YEARLY_RETENTION=0
 
-# Notificações por email
+# Email notifications
 EMAIL_NOTIFICATIONS=true
 EMAIL_TO="admin@example.com"
 SMTP_SERVER="smtp.example.com"
@@ -158,262 +159,261 @@ SMTP_PASSWORD="{{SMTP_PASSWORD}}"
 WEBHOOK_URL="https://hooks.slack.com/services/..."
 ```
 
-### Configuração de Notificações
+### Notification Setup
 
 #### Email
+
 ```bash
 EMAIL_NOTIFICATIONS=true
-EMAIL_TO="admin@empresa.com"
-SMTP_SERVER="smtp.empresa.com"
+EMAIL_TO="admin@company.com"
+SMTP_SERVER="smtp.company.com"
 SMTP_PORT="587"
-SMTP_USER="backup@empresa.com"
+SMTP_USER="backup@company.com"
 SMTP_PASSWORD="{{EMAIL_PASSWORD}}"
 SMTP_USE_TLS=true
 ```
 
-#### Webhook (Slack exemplo)
+#### Webhook (Slack example)
+
 ```bash
 WEBHOOK_URL="https://hooks.slack.com/services/T00000000/B00000000/XXXXXXXXXXXXXXXXXXXXXXXX"
 ```
 
-## 🛠️ Utilização
+## 🛠️ Usage
 
-### Comandos Manuais
+### Manual Commands
 
 ```bash
-# Executar backup manual
+# Run manual backup
 sudo systemctl start freeipa-backup.service
 
-# Executar limpeza manual
+# Run manual cleanup
 sudo systemctl start freeipa-backup-cleanup.service
 
-# Ver estado dos backups
+# Check backup status
 sudo /usr/local/bin/backup-cleanup.sh --status
 
-# Simular limpeza (dry-run)
+# Simulate cleanup (dry-run)
 sudo /usr/local/bin/backup-cleanup.sh --dry-run
 ```
 
-### Gestão dos Timers
+### Timer Management
 
 ```bash
-# Ver estado dos timers
+# Check timer status
 systemctl list-timers freeipa-backup*
 
-# Iniciar timers automáticos
+# Start automatic timers
 sudo systemctl start freeipa-backup.timer
 sudo systemctl start freeipa-backup-cleanup.timer
 
-# Parar timers
+# Stop timers
 sudo systemctl stop freeipa-backup.timer
 sudo systemctl stop freeipa-backup-cleanup.timer
 
-# Ver próxima execução
+# View next execution
 systemctl status freeipa-backup.timer
 ```
 
-### Monitorização
+### Monitoring
 
 ```bash
-# Ver logs em tempo real
+# View logs in real time
 sudo journalctl -f -u freeipa-backup.service
 
-# Ver logs da limpeza
+# View cleanup logs
 sudo journalctl -u freeipa-backup-cleanup.service
 
-# Ver arquivo de log
+# View log file
 sudo tail -f /var/log/freeipa-backup.log
 
-# Testar notificações
+# Test notifications
 sudo /usr/local/bin/notify.sh test
 ```
 
-## 🔍 Comandos Úteis
+## 🔍 Useful Commands
 
-### Verificar Status dos Timers
+### Check Timer Status
 
 ```bash
-# Ver todos os timers FreeIPA
+# View all FreeIPA timers
 systemctl list-timers | grep freeipa
 
-# Ver detalhes do timer de backup
+# View backup timer details
 systemctl status freeipa-backup.timer
 
-# Ver detalhes do timer de limpeza
+# View cleanup timer details
 systemctl status freeipa-backup-cleanup.timer
 
-# Ver configuração dos timers
+# View timer configuration
 cat /etc/systemd/system/freeipa-backup.timer
 cat /etc/systemd/system/freeipa-backup-cleanup.timer
 
-# Verificar se os timers estão habilitados
+# Verify timers are enabled
 systemctl is-enabled freeipa-backup.timer freeipa-backup-cleanup.timer
 
-# Ver todos os timers do sistema (contexto)
+# View all system timers (context)
 systemctl list-timers
 ```
 
-### Verificar Status dos Serviços
+### Check Service Status
 
 ```bash
-# Status do serviço de backup
+# Backup service status
 systemctl status freeipa-backup.service
 
-# Status do serviço de limpeza
+# Cleanup service status
 systemctl status freeipa-backup-cleanup.service
 
-# Histórico de execuções dos timers
+# Timer run history
 journalctl -u freeipa-backup.timer --no-pager -n 10
 journalctl -u freeipa-backup-cleanup.timer --no-pager -n 10
 ```
 
-### Gestão de Backups
+### Backup Management
 
 ```bash
-# Listar backups existentes
+# List existing backups
 sudo ls -la /var/lib/ipa/backup/
 
-# Ver tamanho total do diretório de backups
+# View total size of backup directory
 sudo du -sh /var/lib/ipa/backup/
 
-# Ver tamanho de cada backup individualmente
+# View size of each backup
 sudo bash -c "cd /var/lib/ipa/backup && du -sh * 2>/dev/null"
 
-# Verificar espaço em disco
+# Check disk usage
 df -h /var/lib/ipa/backup
 
-# Executar backup manual
+# Run manual backup
 sudo /usr/local/bin/freeipa-backup.sh
 
-# Executar limpeza manual
+# Run manual cleanup
 sudo /usr/local/bin/backup-cleanup.sh
 
-# Simular limpeza (dry-run)
+# Simulate cleanup (dry-run)
 sudo /usr/local/bin/backup-cleanup.sh --dry-run
 ```
 
-### Monitorização e Logs
+### Monitoring and Logs
 
 ```bash
-# Ver logs do backup em tempo real
+# View backup logs in real time
 tail -f /var/log/freeipa-backup.log
 
-# Ver logs do systemd para backup
+# View systemd logs for backup
 journalctl -u freeipa-backup.service --no-pager -f
 
-# Ver logs do systemd para limpeza
+# View systemd logs for cleanup
 journalctl -u freeipa-backup-cleanup.service --no-pager -f
 
-# Ver últimas 50 linhas dos logs
+# View last 50 log lines
 journalctl -u freeipa-backup.service --no-pager -n 50
 
-# Ver logs de uma data específica
+# View logs for a specific date
 journalctl -u freeipa-backup.service --since "2025-09-11" --until "2025-09-12"
 
-# Ver configuração atual
+# View current configuration
 sudo cat /etc/freeipa-backup-automation/config.conf
 ```
 
-### Diagnósticos e Troubleshooting
+### Diagnostics and Troubleshooting
 
 ```bash
-# Verificar se FreeIPA está a funcionar
+# Check if FreeIPA is running
 systemctl status ipa
 ipactl status
 
-# Testar conectividade LDAP
+# Test LDAP connectivity
 ldapwhoami -x -H ldap://localhost
 
-# Verificar permissões dos scripts
+# Check script permissions
 ls -la /usr/local/bin/freeipa-backup.sh
 ls -la /usr/local/bin/backup-cleanup.sh
 
-# Verificar integridade dos ficheiros de configuração systemd
+# Verify systemd configuration files
 systemd-analyze verify /etc/systemd/system/freeipa-backup.service
 systemd-analyze verify /etc/systemd/system/freeipa-backup.timer
 
-# Recarregar configuração systemd após alterações
+# Reload systemd configuration
 sudo systemctl daemon-reload
 
-# Reiniciar timers após alterações
+# Restart timers after changes
 sudo systemctl restart freeipa-backup.timer
 sudo systemctl restart freeipa-backup-cleanup.timer
 ```
 
-### Gestão do Sistema
+### System Management
 
 ```bash
-# Habilitar/desabilitar timers
+# Enable/disable timers
 sudo systemctl enable freeipa-backup.timer
 sudo systemctl disable freeipa-backup.timer
 
-# Iniciar/parar timers manualmente
+# Start/stop timers manually
 sudo systemctl start freeipa-backup.timer
 sudo systemctl stop freeipa-backup.timer
 
-# Executar serviço de backup imediatamente (para teste)
+# Run backup service immediately (test)
 sudo systemctl start freeipa-backup.service
 
-# Ver próxima execução programada
+# View next scheduled run
 systemctl list-timers freeipa-backup.timer
 
-# Verificar dependências do serviço
+# Check service dependencies
 systemctl list-dependencies freeipa-backup.service
 ```
 
-### Comandos de Manutenção
+### Maintenance Commands
 
 ```bash
-# Limpar logs antigos do journald
+# Clean old journald logs
 sudo journalctl --vacuum-time=30d
 
-# Verificar tamanho dos logs (localização pode variar)
-# Em sistemas com journald persistente:
-sudo du -sh /var/log/journal/
-# Em sistemas com journald em memória (mais comum):
-sudo du -sh /run/log/journal/
-# Ou usar o comando que funciona em qualquer configuração:
+# Check log size
+sudo du -sh /var/log/journal/ || sudo du -sh /run/log/journal/
 sudo journalctl --disk-usage
 
-# Rotacionar logs manualmente
+# Rotate logs manually
 sudo logrotate /etc/logrotate.d/freeipa-backup
 
-# Verificar configuração do logrotate
+# Verify logrotate configuration
 sudo logrotate -d /etc/logrotate.d/freeipa-backup
 ```
 
-## 📊 Agendamento Padrão
+## 📊 Default Scheduling
 
-- **Backups**: Diariamente às 02:00 (com delay aleatório até 30min)
-- **Limpeza**: Domingos às 03:00 (com delay aleatório até 60min)
+* **Backups**: Daily at 02:00 (with random delay up to 30min)
+* **Cleanup**: Sundays at 03:00 (with random delay up to 60min)
 
-### Personalizar Agendamento
+### Customizing Schedule
 
-Edite os ficheiros timer em `/etc/systemd/system/`:
+Edit timer files in `/etc/systemd/system/`:
 
 ```ini
 # freeipa-backup.timer
 [Timer]
-OnCalendar=*-*-* 02:00:00  # Alterar hora aqui
+OnCalendar=*-*-* 02:00:00  # Change time here
 RandomizedDelaySec=30min
 ```
 
-Após alterações:
+After changes:
+
 ```bash
 sudo systemctl daemon-reload
 sudo systemctl restart freeipa-backup.timer
 ```
 
-## 📁 Estrutura de Ficheiros
+## 📁 File Structure
 
 ```
 /usr/local/bin/
-├── freeipa-backup.sh      # Script principal de backup
-├── backup-cleanup.sh      # Script de limpeza
-└── notify.sh              # Script de notificações
+├── freeipa-backup.sh      # Main backup script
+├── backup-cleanup.sh      # Cleanup script
+└── notify.sh              # Notification script
 
 /etc/freeipa-backup-automation/
-└── config.conf            # Configuração principal
+└── config.conf            # Main configuration
 
 /etc/systemd/system/
 ├── freeipa-backup.service
@@ -428,171 +428,172 @@ sudo systemctl restart freeipa-backup.timer
 └── ...
 
 /var/log/
-└── freeipa-backup.log     # Log principal
+└── freeipa-backup.log     # Main log
 ```
 
-## 🔧 Resolução de Problemas
+## 🔧 Troubleshooting
 
-### Backup Falha
+### Backup Fails
 
-1. Verificar se o FreeIPA está a correr:
+1. Check if FreeIPA is running:
+
    ```bash
    sudo ipactl status
    ```
 
-2. Verificar logs:
+2. Check logs:
+
    ```bash
    sudo journalctl -u freeipa-backup.service -n 50
    ```
 
-3. Verificar espaço em disco:
+3. Check disk space:
+
    ```bash
    df -h /var/lib/ipa/backup
    ```
 
-### Notificações Não Funcionam
+### Notifications Not Working
 
-1. Testar configuração:
+1. Test configuration:
+
    ```bash
    sudo /usr/local/bin/notify.sh test
    ```
 
-2. Verificar configuração SMTP:
+2. Check SMTP config:
+
    ```bash
-   # Teste manual com curl
-   echo "Test" | curl --ssl-reqd --url smtp://smtp.exemplo.com:587 \
-     --user usuario@exemplo.com:password \
-     --mail-from usuario@exemplo.com \
-     --mail-rcpt admin@exemplo.com \
+   echo "Test" | curl --ssl-reqd --url smtp://smtp.example.com:587 \
+     --user user@example.com:password \
+     --mail-from user@example.com \
+     --mail-rcpt admin@example.com \
      --upload-file -
    ```
 
-### Permissões
+### Permissions
 
 ```bash
-# Corrigir permissões se necessário
+# Fix permissions if necessary
 sudo chown -R root:root /var/lib/ipa/backup
 sudo chmod 755 /var/lib/ipa/backup
 sudo chmod +x /usr/local/bin/freeipa-backup.sh
 sudo chmod +x /usr/local/bin/backup-cleanup.sh
 ```
 
-### Recovery de Backup
-
-Para restaurar um backup do FreeIPA:
+### Backup Recovery
 
 ```bash
-# Parar serviços
+# Stop services
 sudo ipactl stop
 
-# Restaurar backup (exemplo)
+# Restore backup (example)
 sudo ipa-restore /var/lib/ipa/backup/ipa-full-2024-01-15-020045
 
-# Iniciar serviços
+# Start services
 sudo ipactl start
 ```
 
-## 🔒 Segurança
+## 🔒 Security
 
-### Boas Práticas Implementadas
+### Implemented Best Practices
 
-- Scripts executam apenas como root (necessário para FreeIPA)
-- Lock files previnem execuções simultâneas
-- Tratamento robusto de erros
-- Logs detalhados para auditoria
-- Configurações sensíveis protegidas (600 permissions)
+* Scripts only run as root (required for FreeIPA)
+* Lock files prevent simultaneous executions
+* Robust error handling
+* Detailed logs for auditing
+* Sensitive configs protected (600 permissions)
 
-### Configurações de Segurança SystemD
+### Systemd Security Settings
 
-- `NoNewPrivileges=true`
-- `ProtectSystem=strict`
-- `PrivateTmp=true`
-- `PrivateDevices=true`
-- Filtros de system calls restritivos
+* `NoNewPrivileges=true`
+* `ProtectSystem=strict`
+* `PrivateTmp=true`
+* `PrivateDevices=true`
+* Restrictive syscall filters
 
-### Proteger Credenciais
+### Protecting Credentials
 
 ```bash
-# Configurar permissões restritivas
+# Restrict config file permissions
 sudo chmod 600 /etc/freeipa-backup-automation/config.conf
 
-# Usar variáveis de ambiente para passwords
-export SMTP_PASSWORD="sua-password-aqui"
-# Em vez de colocar diretamente no config.conf
+# Use environment variables for passwords
+export SMTP_PASSWORD="your-password-here"
 ```
 
-## 🔄 Atualizações
-
-Para atualizar o sistema:
+## 🔄 Updates
 
 ```bash
-# Baixar nova versão
+# Fetch latest version
 git pull
 
-# Reinstalar (preserva configuração)
+# Reinstall (preserves config)
 sudo ./install.sh
 ```
 
-## 🗑️ Desinstalação
+## 🗑️ Uninstallation
 
 ```bash
 sudo ./install.sh uninstall
 ```
 
-Este comando remove:
-- Scripts do sistema
-- Serviços systemd
-- Configuração logrotate
+This removes:
 
-**Preserva**:
-- Backups existentes
-- Configuração em `/etc/freeipa-backup-automation/`
-- Logs
+* System scripts
+* Systemd services
+* Logrotate configuration
 
-## 📝 Logs e Monitorização
+**Preserves**:
 
-### Interpretar Logs
+* Existing backups
+* Configuration in `/etc/freeipa-backup-automation/`
+* Logs
+
+## 📝 Logs and Monitoring
+
+### Log Interpretation
 
 ```bash
-# Backup bem-sucedido
+# Successful backup
 [2024-01-15 02:00:45] [INFO] Starting FreeIPA backup process
 [2024-01-15 02:01:23] [INFO] Backup completed successfully
 [2024-01-15 02:01:24] [INFO] Latest backup location: /var/lib/ipa/backup/ipa-full-2024-01-15-020045
 [2024-01-15 02:01:30] [INFO] FreeIPA backup process completed successfully
 
-# Limpeza de backups
+# Cleanup logs
 [2024-01-21 03:00:15] [CLEANUP] [INFO] Starting backup cleanup process
 [2024-01-21 03:00:16] [CLEANUP] [INFO] Keeping backup: ipa-full-2024-01-20-020045 (Age: 1d, Category: daily, Size: 2.1G)
 [2024-01-21 03:00:17] [CLEANUP] [INFO] Removing expired backup: ipa-full-2024-01-05-020045 (Size: 2.0G)
 [2024-01-21 03:00:25] [CLEANUP] [INFO] Cleanup completed: 3 removed, 0 failed, 7 kept
 ```
 
-### Métricas Importantes
+### Key Metrics
 
-- Tempo de backup
-- Tamanho dos backups
-- Taxa de sucesso
-- Espaço libertado pela limpeza
+* Backup duration
+* Backup sizes
+* Success rate
+* Space freed by cleanup
 
-## 🆘 Suporte
+## 🆘 Support
 
-Para suporte:
+For support:
 
-1. Consulte este README
-2. Verifique os logs do sistema
-4. Contacte a equipa de administração
+1. Review this README
+2. Check system logs
+3. Contact the admin team
 
 ## 📈 Roadmap
 
-Funcionalidades planeadas:
+Planned features:
 
-- [ ] Interface web para monitorização
-- [ ] Métricas Prometheus
-- [ ] Backup para cloud storage
-- [ ] Encriptação de backups
-- [ ] Testes de integridade automáticos
-- [ ] Dashboard Grafana
+* [ ] Web interface for monitoring
+* [ ] Prometheus metrics
+* [ ] Cloud storage backup
+* [ ] Backup encryption
+* [ ] Automatic integrity checks
+* [ ] Grafana dashboard
 
 ---
 
-**Nota**: Este sistema foi desenhado especificamente para FreeIPA em ambientes Fedora/CentOS/RHEL, mas deve funcionar em outras distribuições Linux com systemd.
+**Note**: This system was designed specifically for FreeIPA on Fedora/CentOS/RHEL environments, but should also work on other Linux distributions with systemd.
