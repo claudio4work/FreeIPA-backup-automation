@@ -35,30 +35,30 @@ fi
 # Usage function
 usage() {
     cat << EOF
-Uso: $0 [OPTIONS]
+Usage: $0 [OPTIONS]
 
-OPÇÕES:
-  --type TIPO     Tipo de backup: full, data ou auto (padrão: auto)
-  -h, --help      Mostrar esta ajuda
+OPTIONS:
+  --type TYPE     Backup type: full, data or auto (default: auto)
+  -h, --help      Show this help
 
-TIPOS DE BACKUP:
-  full            Backup completo do sistema (sem --data)
-  data            Backup apenas dos dados (com --data)  
-  auto            Automático: FULL aos domingos, DATA nos outros dias
+BACKUP TYPES:
+  full            Complete system backup (without --data)
+  data            Data-only backup (with --data)  
+  auto            Automatic: FULL on Sundays, DATA on other days
 
-VARIÁVEIS DE AMBIENTE:
-  BACKUP_DIR      Diretório dos backups (padrão: /var/lib/ipa/backup)
-  BACKUP_CMD      Comando ipa-backup (padrão: /usr/sbin/ipa-backup)
-  BACKUP_TYPE     Tipo padrão (padrão: auto)
-  DRY_RUN         Modo teste, só mostra comandos (padrão: 0)
-  ONLINE_FLAG     Flag --online (padrão: --online)
-  VERBOSE_FLAG    Flag verbose (padrão: -v)
+ENVIRONMENT VARIABLES:
+  BACKUP_DIR      Backup directory (default: /var/lib/ipa/backup)
+  BACKUP_CMD      ipa-backup command (default: /usr/sbin/ipa-backup)
+  BACKUP_TYPE     Default type (default: auto)
+  DRY_RUN         Test mode, only show commands (default: 0)
+  ONLINE_FLAG     --online flag (default: --online)
+  VERBOSE_FLAG    Verbose flag (default: -v)
 
-EXEMPLOS:
-  $0                          # Backup automático (FULL dom, DATA outros)
-  $0 --type data              # Backup apenas dados
-  $0 --type full              # Backup completo
-  DRY_RUN=1 $0 --type data    # Teste sem executar
+EXAMPLES:
+  $0                          # Automatic backup (FULL Sun, DATA others)
+  $0 --type data              # Data-only backup
+  $0 --type full              # Complete backup
+  DRY_RUN=1 $0 --type data    # Test without execution
 
 EOF
     exit 1
@@ -71,7 +71,7 @@ parse_args() {
             --type)
                 shift
                 if [ $# -eq 0 ]; then
-                    echo "Erro: --type requer um argumento (full|data|auto)"
+                    echo "Error: --type requires an argument (full|data|auto)"
                     usage
                 fi
                 BACKUP_TYPE="$1"
@@ -80,7 +80,7 @@ parse_args() {
                 usage
                 ;;
             *)
-                echo "Erro: Argumento inválido: $1"
+                echo "Error: Invalid argument: $1"
                 usage
                 ;;
         esac
@@ -106,8 +106,8 @@ detect_type() {
             # Valid types
             ;;
         *)
-            echo "Erro: Tipo de backup inválido: $BACKUP_TYPE"
-            echo "Tipos válidos: full, data, auto"
+            echo "Error: Invalid backup type: $BACKUP_TYPE"
+            echo "Valid types: full, data, auto"
             exit 1
             ;;
     esac
