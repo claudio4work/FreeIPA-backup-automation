@@ -1,8 +1,8 @@
-# FreeIPA Backup Automation v2.0
+# FreeIPA Backup Automation 2.0.0
 
 A comprehensive automation solution for regular FreeIPA backups with intelligent retention management and monitoring.
 
-## 🆕 What's New in v2.0
+## 🆕 What's New in 2.0.0
 
 - **🎯 FULL/DATA Strategy**: FULL backups on Sundays, DATA backups on other days
 - **🔧 Flexibility**: Manual execution support with `--type {full|data|auto}`
@@ -10,7 +10,7 @@ A comprehensive automation solution for regular FreeIPA backups with intelligent
 - **⚡ Performance**: Online DATA backups (without stopping services)
 - **🔍 Enhanced Logging**: Logs to systemd journal and file
 - **🔒 Security**: Rigorous validation and variable management
-- **📦 Installation**: Automated script for v1.0 → v2.0 upgrade
+- **📦 Installation**: Automated script for 1.0.0 → 2.0.0 upgrade
 
 ## 🎯 Features
 
@@ -32,7 +32,7 @@ By default, the system keeps:
 
 This policy is configurable in the `config.conf` file.
 
-## 🛠️ v2.0 Usage
+## 😠 Usage (2.0.0)
 
 ### Manual Execution
 
@@ -50,7 +50,7 @@ sudo /opt/sysadmin-scripts/freeipa-backup-automation/freeipa-backup.sh --type fu
 DRY_RUN=1 /opt/sysadmin-scripts/freeipa-backup-automation/freeipa-backup.sh --type full
 ````
 
-### v2.0 Timer Management
+### Timer Management (2.0.0)
 
 ```bash
 # Check status of new timers
@@ -87,32 +87,32 @@ sudo -E /opt/sysadmin-scripts/freeipa-backup-automation/freeipa-backup.sh
 * Root access
 * systemd (for scheduling)
 
-### Fresh Installation (v2.0)
+### Fresh Installation (2.0.0)
 
 ```bash
 # Clone the repository
 git clone <repository-url>
 cd freeipa-backup-automation
 
-# Run the v2.0 installation script
-sudo ./install-v2.sh
+# Run the 2.0.0 installation script
+sudo ./install-2.0.0.sh
 ```
 
-### Upgrade v1.0 → v2.0
+### Upgrade 1.0.0 → 2.0.0
 
-To upgrade from an existing v1.0 installation:
+To upgrade from an existing 1.0.0 installation:
 
 ```bash
 # In the repository directory
-sudo ./install-v2.sh upgrade
+sudo ./install-2.0.0.sh upgrade
 
 # In case of problems, automatic rollback
-sudo ./install-v2.sh rollback
+sudo ./install-2.0.0.sh rollback
 ```
 
 📝 **What happens during upgrade:**
 
-1. ✅ Automatic backup of current v1.0 installation
+1. ✅ Automatic backup of current 1.0.0 installation
 2. ✅ Installation of new script with FULL/DATA support
 3. ✅ Configuration of new timers (DATA: Mon-Sat, FULL: Sun)
 4. ✅ Deactivation of old daily timer
@@ -534,21 +534,41 @@ sudo ./install.sh
 
 ## 🗑️ Uninstallation
 
+### Version 2.0.0 Uninstallation
+
+```bash
+# Standard uninstall (preserves data)
+sudo ./uninstall-2.0.0.sh
+
+# Show what would be removed without actually removing
+sudo ./uninstall-2.0.0.sh --dry-run
+
+# Remove everything including backups and logs (DANGEROUS!)
+sudo ./uninstall-2.0.0.sh --force
+```
+
+### Legacy Version 1.0.0 Uninstallation
+
 ```bash
 sudo ./install.sh uninstall
 ```
 
-This removes:
+### What Gets Removed (Standard Uninstall)
 
-* System scripts
-* Systemd services
+* All systemd services and timers (both v1.0.0 and v2.0.0)
+* All backup scripts and documentation
 * Logrotate configuration
 
-**Preserves**:
+### What Gets Preserved (Standard Uninstall)
 
-* Existing backups
-* Configuration in `/etc/freeipa-backup-automation/`
-* Logs
+* **Existing backups** in `/var/lib/ipa/backup/`
+* **Configuration** in `/etc/freeipa-backup-automation/`
+* **Log files** in `/var/log/freeipa-backup.log*`
+* **Pre-uninstall backup** in `/root/backups/`
+
+### Complete Removal (--force)
+
+The `--force` option removes everything including all backups and configuration. Use with extreme caution!
 
 ## 📝 Logs and Monitoring
 

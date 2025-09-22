@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #
-# Instalação/Atualização FreeIPA Backup v2.0
-# Script para atualizar do sistema v1.0 para v2.0
+# Instalação/Atualização FreeIPA Backup 2.0.0
+# Script para atualizar do sistema 1.0.0 para 2.0.0
 #
 
 set -euo pipefail
@@ -44,7 +44,7 @@ check_root() {
 
 # Backup current installation
 backup_current() {
-    local backup_dir="/root/backups/freeipa-backup-v2-upgrade-$(date +%F_%H-%M-%S)"
+    local backup_dir="/root/backups/freeipa-backup-2.0.0-upgrade-$(date +%F_%H-%M-%S)"
     
     log "INFO" "Creating backup in $backup_dir"
     mkdir -p "$backup_dir"
@@ -55,7 +55,7 @@ backup_current() {
     [[ -f "$SYSTEMD_DIR/freeipa-backup.timer" ]] && cp -a "$SYSTEMD_DIR/freeipa-backup.timer" "$backup_dir/"
     
     log "OK" "Backup completed in $backup_dir"
-    echo "$backup_dir" > /tmp/freeipa-backup-v2-backup-path
+    echo "$backup_dir" > /tmp/freeipa-backup-2.0.0-backup-path
 }
 
 # Install new files
@@ -65,14 +65,20 @@ install_files() {
     # Create install directory if it doesn't exist
     mkdir -p "$INSTALL_DIR"
     
-    # Install new script
+    # Install new scripts
     cp "$SCRIPT_DIR/freeipa-backup.sh" "$INSTALL_DIR/"
+    cp "$SCRIPT_DIR/backup-cleanup.sh" "$INSTALL_DIR/"
+    cp "$SCRIPT_DIR/notify.sh" "$INSTALL_DIR/"
     chmod +x "$INSTALL_DIR/freeipa-backup.sh"
+    chmod +x "$INSTALL_DIR/backup-cleanup.sh"
+    chmod +x "$INSTALL_DIR/notify.sh"
     
     # Install new systemd files
-    cp "$SCRIPT_DIR/systemd-v2/freeipa-backup@.service" "$SYSTEMD_DIR/"
-    cp "$SCRIPT_DIR/systemd-v2/freeipa-backup-data.timer" "$SYSTEMD_DIR/"
-    cp "$SCRIPT_DIR/systemd-v2/freeipa-backup-full.timer" "$SYSTEMD_DIR/"
+    cp "$SCRIPT_DIR/systemd-2.0.0/freeipa-backup@.service" "$SYSTEMD_DIR/"
+    cp "$SCRIPT_DIR/systemd-2.0.0/freeipa-backup-data.timer" "$SYSTEMD_DIR/"
+    cp "$SCRIPT_DIR/systemd-2.0.0/freeipa-backup-full.timer" "$SYSTEMD_DIR/"
+    cp "$SCRIPT_DIR/systemd-2.0.0/freeipa-backup-cleanup.service" "$SYSTEMD_DIR/"
+    cp "$SCRIPT_DIR/systemd-2.0.0/freeipa-backup-cleanup.timer" "$SYSTEMD_DIR/"
     
     log "OK" "Files installed successfully"
 }
@@ -90,6 +96,7 @@ update_systemd() {
     # Enable and start new timers
     systemctl enable --now freeipa-backup-data.timer
     systemctl enable --now freeipa-backup-full.timer
+    systemctl enable --now freeipa-backup-cleanup.timer
     
     log "OK" "Systemd configuration updated"
 }
@@ -116,7 +123,7 @@ show_status() {
 # Rollback function
 rollback() {
     local backup_path
-    backup_path=$(cat /tmp/freeipa-backup-v2-backup-path 2>/dev/null || echo "")
+    backup_path=$(cat /tmp/freeipa-backup-2.0.0-backup-path 2>/dev/null || echo "")
     
     if [[ -z "$backup_path" ]]; then
         log "ERROR" "No backup path found for rollback"
@@ -131,7 +138,7 @@ rollback() {
     [[ -f "$backup_path/freeipa-backup.timer" ]] && cp "$backup_path/freeipa-backup.timer" "$SYSTEMD_DIR/"
     
     # Disable new timers
-    systemctl disable --now freeipa-backup-data.timer freeipa-backup-full.timer 2>/dev/null || true
+    systemctl disable --now freeipa-backup-data.timer freeipa-backup-full.timer freeipa-backup-cleanup.timer 2>/dev/null || true
     
     # Enable old timer
     systemctl daemon-reload
@@ -159,14 +166,14 @@ main() {
             ;;
         *)
             echo "Usage: $0 [install|upgrade|rollback|test]"
-            echo "  install  - Install/update to v2.0 (default)"
-            echo "  upgrade  - Same as install (upgrade v1.0 → v2.0)"
+            echo "  install  - Install/update to 2.0.0 (default)"
+            echo "  upgrade  - Same as install (upgrade 1.0.0 → 2.0.0)"
             echo "  rollback - Rollback to previous version"
             echo "  test     - Test the installed script"
             echo
             echo "Examples:"
             echo "  sudo $0              # Fresh install or upgrade"
-            echo "  sudo $0 upgrade      # Upgrade from v1.0 to v2.0"
+            echo "  sudo $0 upgrade      # Upgrade from 1.0.0 to 2.0.0"
             echo "  sudo $0 rollback     # Emergency rollback"
             echo "  sudo $0 test         # Test current installation"
             exit 1

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# FreeIPA Backup Script v2.0
+# FreeIPA Backup Script 2.0.0
 # Performs automated backup of FreeIPA server with FULL/DATA support
 # Supports:
 #   - FULL backups (complete system) on Sundays  

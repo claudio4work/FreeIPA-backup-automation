@@ -7,7 +7,14 @@
 
 # Source configuration
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-CONFIG_FILE="${SCRIPT_DIR}/config.conf"
+# Try to find config file in multiple locations (for compatibility)
+if [[ -f "/etc/freeipa-backup-automation/config.conf" ]]; then
+    CONFIG_FILE="/etc/freeipa-backup-automation/config.conf"
+elif [[ -f "${SCRIPT_DIR}/config.conf" ]]; then
+    CONFIG_FILE="${SCRIPT_DIR}/config.conf"
+else
+    CONFIG_FILE="/etc/freeipa-backup-automation/config.conf"
+fi
 
 # Default values
 BACKUP_DIR="/var/lib/ipa/backup"
