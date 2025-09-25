@@ -2,6 +2,13 @@
 
 A comprehensive automation solution for regular FreeIPA backups with intelligent retention management and monitoring.
 
+## 🆕 What's New in 2.0.1
+
+- **⚠️ CRITICAL FIX**: Resolved systemd ReadWritePaths issue that caused backup failures
+- **📁 Simplified Structure**: Single `systemd/` folder instead of versioned folders
+- **🔧 Direct Installation**: `install-2.0.1.sh` for direct installation without intermediate steps
+- **🎯 Enhanced Compatibility**: Better systemd sandboxing support
+
 ## 🆕 What's New in 2.0.0
 
 - **🎯 FULL/DATA Strategy**: FULL backups on Sundays, DATA backups on other days
@@ -87,27 +94,39 @@ sudo -E /opt/sysadmin-scripts/freeipa-backup-automation/freeipa-backup.sh
 * Root access
 * systemd (for scheduling)
 
-### Fresh Installation (2.0.0)
+### Fresh Installation (2.0.1) - RECOMMENDED ⭐
 
 ```bash
 # Clone the repository
 git clone https://github.com/claudio4work/freeipa-backup-automation.git
 cd freeipa-backup-automation
 
-# Run the 2.0.0 installation script
-sudo ./install-2.0.0.sh
+# Run the 2.0.1 installation script (includes ReadWritePaths fix)
+sudo ./install-2.0.1.sh
 ```
 
-### Upgrade 1.0.0 → 2.0.0
+### Upgrade from ANY Version → 2.0.1
 
-To upgrade from an existing 1.0.0 installation:
+To upgrade from 1.0.0 or 2.0.0 to 2.0.1:
 
 ```bash
 # In the repository directory
-sudo ./install-2.0.0.sh upgrade
+sudo ./install-2.0.1.sh upgrade
 
 # In case of problems, automatic rollback
-sudo ./install-2.0.0.sh rollback
+sudo ./install-2.0.1.sh rollback
+```
+
+### Alternative: Upgrade from 1.0.0 → 2.0.0 → 2.0.1
+
+If you prefer the step-by-step approach:
+
+```bash
+# Step 1: Upgrade 1.0.0 → 2.0.0
+sudo ./install-2.0.0.sh upgrade
+
+# Step 2: Apply 2.0.1 hotfix
+sudo ./hotfix-2.0.1.sh
 ```
 
 📝 **What happens during upgrade:**
