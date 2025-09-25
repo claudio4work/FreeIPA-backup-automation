@@ -77,11 +77,11 @@ install_files() {
     [[ -f "$SCRIPT_DIR/README.md" ]] && cp "$SCRIPT_DIR/README.md" "$INSTALL_DIR/"
     
     # Install new systemd files
-    cp "$SCRIPT_DIR/systemd-2.0.0/freeipa-backup@.service" "$SYSTEMD_DIR/"
-    cp "$SCRIPT_DIR/systemd-2.0.0/freeipa-backup-data.timer" "$SYSTEMD_DIR/"
-    cp "$SCRIPT_DIR/systemd-2.0.0/freeipa-backup-full.timer" "$SYSTEMD_DIR/"
-    cp "$SCRIPT_DIR/systemd-2.0.0/freeipa-backup-cleanup.service" "$SYSTEMD_DIR/"
-    cp "$SCRIPT_DIR/systemd-2.0.0/freeipa-backup-cleanup.timer" "$SYSTEMD_DIR/"
+    cp "$SCRIPT_DIR/systemd/freeipa-backup@.service" "$SYSTEMD_DIR/"
+    cp "$SCRIPT_DIR/systemd/freeipa-backup-data.timer" "$SYSTEMD_DIR/"
+    cp "$SCRIPT_DIR/systemd/freeipa-backup-full.timer" "$SYSTEMD_DIR/"
+    cp "$SCRIPT_DIR/systemd/freeipa-backup-cleanup.service" "$SYSTEMD_DIR/"
+    cp "$SCRIPT_DIR/systemd/freeipa-backup-cleanup.timer" "$SYSTEMD_DIR/"
     
     log "OK" "Files installed successfully"
 }
