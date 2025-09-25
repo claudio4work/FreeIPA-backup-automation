@@ -1,4 +1,4 @@
-# FreeIPA Backup Automation 2.0.0
+# FreeIPA Backup Automation 2.0.1
 
 A comprehensive automation solution for regular FreeIPA backups with intelligent retention management and monitoring.
 
@@ -433,6 +433,27 @@ sudo systemctl restart freeipa-backup.timer
 
 ## 🔧 Troubleshooting
 
+### "Read-only file system" Errors (v2.0.0+)
+
+**Symptoms**: Backups fail with errors like:
+- `Unable to move LDIF: [Errno 30] Read-only file system`
+- `The DSE database stored in "/etc/dirsrv/slapd-DOMAIN/dse.ldif" is not writeable`
+
+**Solution**: Update the systemd service ReadWritePaths configuration:
+
+```bash
+# Edit the service file
+sudo nano /etc/systemd/system/freeipa-backup@.service
+
+# Update the ReadWritePaths line to:
+ReadWritePaths=/var/lib /etc/dirsrv /var/log /var/run
+
+# Reload and restart
+sudo systemctl daemon-reload
+```
+
+**Explanation**: The systemd security setting `ProtectSystem=strict` makes the filesystem read-only except for directories explicitly listed in `ReadWritePaths`. FreeIPA needs write access to `/var/lib/dirsrv` for LDIF files and `/etc/dirsrv` for configuration updates during backups.
+
 ### Backup Fails
 
 1. Check if FreeIPA is running:
@@ -444,7 +465,8 @@ sudo systemctl restart freeipa-backup.timer
 2. Check logs:
 
    ```bash
-   sudo journalctl -u freeipa-backup.service -n 50
+   sudo journalctl -u freeipa-backup@data.service -n 50  # For DATA backups
+   sudo journalctl -u freeipa-backup@full.service -n 50  # For FULL backups
    ```
 
 3. Check disk space:

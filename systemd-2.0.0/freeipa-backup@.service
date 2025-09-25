@@ -20,8 +20,8 @@ ProtectSystem=strict
 PrivateTmp=true
 PrivateDevices=true
 
-# Allow writing to backup directory, log files, and runtime directory
-ReadWritePaths=/var/lib/ipa/backup /var/log /var/run
+# Allow writing to backup directory, log files, runtime directory, and FreeIPA directories
+ReadWritePaths=/var/lib /etc/dirsrv /var/log /var/run
 
 # Resource limits
 Nice=10
